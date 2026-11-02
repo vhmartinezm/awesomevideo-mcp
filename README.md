@@ -42,6 +42,151 @@ Get a key at [awesomevideoeditor.com](https://awesomevideoeditor.com), or call t
 }
 ```
 
+## Recipes (copy and paste)
+
+Also at https://awesomevideoeditor.com/agents.
+
+Zero to first video: 1) get a key (`POST /v1/keys/anonymous` or MCP `create_key`, no sign-in); 2) call the recipe with a public video URL; 3) if the balance is short you get 402 `insufficient_balance` with `checkoutUrl` (a human pays $5 = 500 credits for this key, no sign-in) and `quote`; retry the same call after paying. New keys may include a few `welcomeCredits`.
+
+```bash
+curl -X POST https://api.awesomevideoeditor.com/v1/keys/anonymous -H "Content-Type: application/json" -d '{"name":"my-agent"}'
+# -> {"token":"av_live_...","balanceCents":0,...}  export AV_KEY=av_live_...
+```
+
+MCP client config (Streamable HTTP):
+
+```json
+{
+  "mcpServers": {
+    "awesomevideo": {
+      "url": "https://api.awesomevideoeditor.com/mcp",
+      "headers": {
+        "Authorization": "Bearer av_live_..."
+      }
+    }
+  }
+}
+```
+
+### Caption a video
+
+Video in, MP4 with burned subtitles plus SRT and VTT out. One call. Price: 5 credits per audio minute.
+
+```bash
+curl -X POST https://api.awesomevideoeditor.com/v1/captions \
+  -H "Authorization: Bearer $AV_KEY" -H "Content-Type: application/json" \
+  -d '{"sourceUrl":"https://example.com/talk.mp4","preset":"hormozi-pop","wait":true}'
+```
+
+MCP: `caption_video {"sourceUrl":"https://example.com/talk.mp4","preset":"hormozi-pop"}`
+
+```python
+import os, requests
+
+r = requests.post(
+    "https://api.awesomevideoeditor.com/v1/captions",
+    headers={"Authorization": f"Bearer {os.environ['AV_KEY']}"},
+    json={
+        "sourceUrl": "https://example.com/talk.mp4",
+        "preset": "hormozi-pop",
+        "wait": True
+    },
+    timeout=120,
+)
+print(r.status_code, r.json())
+```
+
+### Translate and dub
+
+Spoken translation fitted to the original timing, mixed over the original audio. Price: 5 credits per minute per language, plus transcription and translation.
+
+```bash
+curl -X POST https://api.awesomevideoeditor.com/v1/dub \
+  -H "Authorization: Bearer $AV_KEY" -H "Content-Type: application/json" \
+  -d '{"mediaUrl":"https://example.com/talk.mp4","targetLanguage":"es"}'
+```
+
+MCP: `dub {"mediaUrl":"https://example.com/talk.mp4","targetLanguage":"es"}`
+
+```python
+import os, requests
+
+r = requests.post(
+    "https://api.awesomevideoeditor.com/v1/dub",
+    headers={"Authorization": f"Bearer {os.environ['AV_KEY']}"},
+    json={
+        "mediaUrl": "https://example.com/talk.mp4",
+        "targetLanguage": "es"
+    },
+    timeout=120,
+)
+print(r.status_code, r.json())
+```
+
+### 9:16 shorts from a long video
+
+An LLM picks the best moments, reframes them to 9:16 on the speaker and captions them. Price: about 1 credit per source minute plus a few per clip (30 min, 3 clips of 60 s = 42 credits); quote first.
+
+```bash
+curl -X POST https://api.awesomevideoeditor.com/v1/clips \
+  -H "Authorization: Bearer $AV_KEY" -H "Content-Type: application/json" \
+  -d '{"sourceUrl":"https://example.com/podcast.mp4","count":3,"reframe":"face","platform":"tiktok"}'
+```
+
+MCP: `create_clips {"sourceUrl":"https://example.com/podcast.mp4","count":3,"reframe":"face","platform":"tiktok"}`
+
+```python
+import os, requests
+
+r = requests.post(
+    "https://api.awesomevideoeditor.com/v1/clips",
+    headers={"Authorization": f"Bearer {os.environ['AV_KEY']}"},
+    json={
+        "sourceUrl": "https://example.com/podcast.mp4",
+        "count": 3,
+        "reframe": "face",
+        "platform": "tiktok"
+    },
+    timeout=120,
+)
+print(r.status_code, r.json())
+```
+
+### Caption a folder
+
+Up to 50 videos in one call, one style, priced together. dryRun quotes for free. Price: 5 credits per audio minute per video.
+
+```bash
+curl -X POST https://api.awesomevideoeditor.com/v1/batch \
+  -H "Authorization: Bearer $AV_KEY" -H "Content-Type: application/json" \
+  -d '{"operation":"caption","preset":"hormozi-pop","items":[{"mediaUrl":"https://example.com/ep1.mp4"},{"mediaUrl":"https://example.com/ep2.mp4"}]}'
+```
+
+MCP: `batch {"operation":"caption","preset":"hormozi-pop","items":[{"mediaUrl":"https://example.com/ep1.mp4"},{"mediaUrl":"https://example.com/ep2.mp4"}]}`
+
+```python
+import os, requests
+
+r = requests.post(
+    "https://api.awesomevideoeditor.com/v1/batch",
+    headers={"Authorization": f"Bearer {os.environ['AV_KEY']}"},
+    json={
+        "operation": "caption",
+        "preset": "hormozi-pop",
+        "items": [
+            {
+                "mediaUrl": "https://example.com/ep1.mp4"
+            },
+            {
+                "mediaUrl": "https://example.com/ep2.mp4"
+            }
+        ]
+    },
+    timeout=120,
+)
+print(r.status_code, r.json())
+```
+
 ## Tools (27)
 
 | Tool | What it does |
