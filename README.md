@@ -219,6 +219,10 @@ print(r.status_code, r.json())
 | `create_checkout` | Get a checkout link to add credits |
 | `get_account` | Read balance and account details |
 
+## Agent skill (ClawHub)
+
+ClawHub-ready skill for agents: [`skills/awesomevideo-captions/SKILL.md`](skills/awesomevideo-captions/SKILL.md) — keyless `/mcp` + `create_key`, one-call `caption_video` / REST captions.
+
 ## Pricing
 
 Free to connect. `estimate` prices every job for free before it runs. Paid tools use prepaid credits (1 credit = 1¢); failed jobs are refunded automatically. See [pricing](https://awesomevideoeditor.com/pricing).
